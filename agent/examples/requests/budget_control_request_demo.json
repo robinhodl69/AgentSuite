@@ -1,0 +1,57 @@
+{
+  "company_id": "demo-company",
+  "actor_role": "finance_manager",
+  "budgets": [
+    {
+      "category": "Viaticos",
+      "monthly_limit": 8000.0,
+      "month": "2026-04-01"
+    },
+    {
+      "category": "Marketing",
+      "monthly_limit": 15000.0,
+      "month": "2026-04-01"
+    },
+    {
+      "category": "Operaciones",
+      "monthly_limit": 12000.0,
+      "month": "2026-04-01"
+    }
+  ],
+  "existing_expenses": [
+    {
+      "expense_id": "EXP-001",
+      "booked_at": "2026-04-20",
+      "amount": 6800.0,
+      "description": "Uber aeropuerto",
+      "category": "Viaticos"
+    },
+    {
+      "expense_id": "EXP-002",
+      "booked_at": "2026-04-18",
+      "amount": 13200.0,
+      "description": "Facebook Ads abril",
+      "category": "Marketing"
+    }
+  ],
+  "new_expenses": [
+    {
+      "expense_id": "EXP-003",
+      "booked_at": "2026-04-24",
+      "amount": 450.0,
+      "description": "Uber Aeropuerto"
+    },
+    {
+      "expense_id": "EXP-004",
+      "booked_at": "2026-04-24",
+      "amount": 1200.0,
+      "description": "Facebook Ads campana cierre"
+    }
+  ],
+  "policy": {
+    "alert_threshold_percent": 90.0,
+    "critical_threshold_percent": 100.0,
+    "block_on_critical": true
+  }
+}
+

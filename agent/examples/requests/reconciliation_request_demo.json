@@ -1,0 +1,34 @@
+{
+  "company_id": "demo-company",
+  "actor_role": "accountant",
+  "statement_csv": "date,amount,description,reference,counterparty\n2026-04-05,1000.00,Cobro factura FAC-1001,FAC-1001,Cliente Demo\n2026-04-06,25.00,Comision bancaria abril,BNK-001,Banco Demo\n2026-04-07,450.00,Pago proveedor UBER TRAVEL,EXP-200,Uber\n2026-04-08,3200.00,Cobro factura FAC-1002,FAC-1002,Cliente Norte\n",
+  "sales_invoices": [
+    {
+      "invoice_id": "FAC-1001",
+      "issued_at": "2026-04-04",
+      "amount": 1000.0,
+      "customer_name": "Cliente Demo",
+      "reference": "FAC-1001",
+      "status": "pending"
+    },
+    {
+      "invoice_id": "FAC-1002",
+      "issued_at": "2026-04-08",
+      "amount": 3200.0,
+      "customer_name": "Cliente Norte",
+      "reference": "FAC-1002",
+      "status": "pending"
+    }
+  ],
+  "expense_records": [
+    {
+      "record_id": "EXP-200",
+      "booked_at": "2026-04-07",
+      "amount": 450.0,
+      "description": "Uber aeropuerto",
+      "vendor_name": "Uber",
+      "reference": "EXP-200"
+    }
+  ]
+}
+

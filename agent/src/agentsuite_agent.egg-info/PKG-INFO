@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: agentsuite-agent
+Version: 0.1.0
+Summary: LangGraph backend workspace for AgentSuite.
+Requires-Python: >=3.12
+Requires-Dist: fastapi<1.0.0,>=0.115.12
+Requires-Dist: langchain<2.0.0,>=1.2.15
+Requires-Dist: langgraph<2.0.0,>=1.1.9
+Requires-Dist: openai<2.0.0,>=1.76.2
+Requires-Dist: python-dotenv<2.0.0,>=1.2.2
+Requires-Dist: python-multipart<1.0.0,>=0.0.20
+Requires-Dist: pyyaml<7.0.0,>=6.0.2
+Requires-Dist: uvicorn<1.0.0,>=0.34.2
+Provides-Extra: dev
+Requires-Dist: pytest<9.0.0,>=8.3.5; extra == "dev"

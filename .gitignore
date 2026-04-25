@@ -1,0 +1,7 @@
+agent/.venv/
+agent/.pytest_cache/
+agent/agentsuite_agent.egg-info/
+agent/cache/
+agent/node_modules/
+frontend/node_modules/
+frontend/dist/

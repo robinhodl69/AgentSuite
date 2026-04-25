@@ -1,0 +1,20 @@
+{
+  "name": "agentsuite-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Hardhat workspace and Python agent environment for AgentSuite.",
+  "scripts": {
+    "contracts:compile": "HARDHAT_DISABLE_TELEMETRY_PROMPT=true hardhat compile",
+    "contracts:test": "HARDHAT_DISABLE_TELEMETRY_PROMPT=true hardhat test",
+    "contracts:node": "HARDHAT_DISABLE_TELEMETRY_PROMPT=true hardhat node"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.2",
+    "dotenv": "^17.4.2",
+    "hardhat": "^2.28.6"
+  }
+}

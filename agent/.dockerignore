@@ -1,0 +1,14 @@
+.venv
+__pycache__
+.pytest_cache
+node_modules
+cache
+contracts
+scripts
+test
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+

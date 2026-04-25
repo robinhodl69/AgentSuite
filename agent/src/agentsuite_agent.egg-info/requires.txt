@@ -1,0 +1,11 @@
+fastapi<1.0.0,>=0.115.12
+langchain<2.0.0,>=1.2.15
+langgraph<2.0.0,>=1.1.9
+openai<2.0.0,>=1.76.2
+python-dotenv<2.0.0,>=1.2.2
+python-multipart<1.0.0,>=0.0.20
+pyyaml<7.0.0,>=6.0.2
+uvicorn<1.0.0,>=0.34.2
+
+[dev]
+pytest<9.0.0,>=8.3.5

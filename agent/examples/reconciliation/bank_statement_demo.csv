@@ -1,0 +1,6 @@
+date,amount,description,reference,counterparty
+2026-04-05,1000.00,Cobro factura FAC-1001,FAC-1001,Cliente Demo
+2026-04-06,25.00,Comision bancaria abril,BNK-001,Banco Demo
+2026-04-07,450.00,Pago proveedor UBER TRAVEL,EXP-200,Uber
+2026-04-08,3200.00,Cobro factura FAC-1002,FAC-1002,Cliente Norte
+

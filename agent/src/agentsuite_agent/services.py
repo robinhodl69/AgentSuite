@@ -8,6 +8,7 @@ from io import StringIO
 from typing import Any
 
 from .chain import BaseChainExecutor
+from .errors import ExecutionError
 from .llm import BaseLLMClient
 from .models import (
     BankTransaction,
@@ -28,8 +29,12 @@ from .models import (
 )
 
 
-def _money(value: float) -> float:
-    return round(value + 1e-9, 2)
+def _money(value: float, decimals: int = 2) -> float:
+    return round(value + 1e-9, decimals)
+
+
+def _currency_decimals(currency: str | None) -> int:
+    return 6 if (currency or "").strip().upper() == "MON" else 2
 
 
 def _parse_date(value: str | date) -> date:
@@ -136,6 +141,7 @@ class ProcessService(ABC):
         normalized_inputs: dict[str, Any],
         analysis: dict[str, Any],
         policy: dict[str, Any],
+        run_id: str,
         chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
         raise NotImplementedError
@@ -287,6 +293,7 @@ class ReconciliationService(ProcessService):
         normalized_inputs: dict[str, Any],
         analysis: dict[str, Any],
         policy: dict[str, Any],
+        run_id: str,
         chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
         return {"actions": []}
@@ -345,6 +352,7 @@ class SupplierPaymentService(ProcessService):
         llm_client: BaseLLMClient,
     ) -> dict[str, Any]:
         request: SupplierPaymentRequest = normalized_inputs["request"]
+        amount_decimals = _currency_decimals(request.cash_position.currency)
         available_cash = (
             request.cash_position.available_balance
             - request.cash_position.reserved_balance
@@ -357,9 +365,10 @@ class SupplierPaymentService(ProcessService):
         for invoice in request.invoices:
             discounted_amount = _money(
                 invoice.amount_due
-                * (1 - (invoice.early_payment_discount_percent / 100))
+                * (1 - (invoice.early_payment_discount_percent / 100)),
+                amount_decimals,
             )
-            savings = _money(invoice.amount_due - discounted_amount)
+            savings = _money(invoice.amount_due - discounted_amount, amount_decimals)
             if not invoice.strategic:
                 decisions.append(
                     PaymentDecision(
@@ -469,9 +478,11 @@ class SupplierPaymentService(ProcessService):
         normalized_inputs: dict[str, Any],
         analysis: dict[str, Any],
         policy: dict[str, Any],
+        run_id: str,
         chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
         request: SupplierPaymentRequest = normalized_inputs["request"]
+        invoices_by_id = {invoice.invoice_id: invoice for invoice in request.invoices}
         executed: list[PaymentDecision] = []
         if request.execution_mode == "evaluate":
             return {"executed_payments": executed}
@@ -479,10 +490,32 @@ class SupplierPaymentService(ProcessService):
         for decision in analysis["decisions"]:
             if decision.status != "ready_to_pay":
                 continue
+            invoice = invoices_by_id.get(decision.invoice_id)
+            if invoice is None:
+                raise ExecutionError(
+                    f"Invoice {decision.invoice_id} is missing from the normalized supplier payload."
+                )
+            if (
+                request.execution_mode == "execute"
+                and not invoice.beneficiary_address
+            ):
+                raise ExecutionError(
+                    "beneficiary_address is required for execution_mode=execute."
+                )
             if request.execution_mode == "simulate":
-                result = chain_executor.simulate_supplier_payment(decision)
+                result = chain_executor.simulate_supplier_payment(
+                    decision,
+                    beneficiary_address=invoice.beneficiary_address,
+                    run_id=run_id,
+                    currency=request.cash_position.currency,
+                )
             else:
-                result = chain_executor.execute_supplier_payment(decision)
+                result = chain_executor.execute_supplier_payment(
+                    decision,
+                    beneficiary_address=invoice.beneficiary_address,
+                    run_id=run_id,
+                    currency=request.cash_position.currency,
+                )
             decision.status = result.status
             decision.tx_hash = result.tx_hash
             decision.explorer_url = result.explorer_url
@@ -500,7 +533,10 @@ class SupplierPaymentService(ProcessService):
         request: SupplierPaymentRequest = normalized_inputs["request"]
         decisions: list[PaymentDecision] = analysis["decisions"]
         executed = actions["executed_payments"]
-        total_savings = _money(sum(item.savings_amount for item in executed))
+        total_savings = _money(
+            sum(item.savings_amount for item in executed),
+            _currency_decimals(request.cash_position.currency),
+        )
         summary = (
             f"Evalué {len(decisions)} facturas de proveedor: {sum(1 for item in decisions if item.status == 'ready_to_pay')} listas para pago, "
             f"{sum(1 for item in decisions if item.status == 'pending_approval')} pendientes de aprobación y "
@@ -655,6 +691,7 @@ class BudgetControlService(ProcessService):
         normalized_inputs: dict[str, Any],
         analysis: dict[str, Any],
         policy: dict[str, Any],
+        run_id: str,
         chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
         return {"actions": []}

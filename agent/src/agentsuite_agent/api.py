@@ -73,6 +73,10 @@ def create_app(
             raise HTTPException(status_code=404, detail="Run not found.")
         return jsonable_encoder(run)
 
+    @app.get("/agent/runs")
+    def list_runs():
+        return jsonable_encoder(runner.run_repository.list())
+
     @app.get("/agent/runs/{run_id}/audit")
     def get_audit(run_id: str):
         audit_log = runner.run_repository.audit(run_id)

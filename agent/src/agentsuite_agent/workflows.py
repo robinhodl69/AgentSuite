@@ -133,6 +133,7 @@ class AgentWorkflowRunner:
                 state["normalized_inputs"],
                 state["analysis"],
                 state["policy"],
+                state["run_id"],
                 self.chain_executor,
             )
             return {
@@ -210,4 +211,3 @@ def build_runner(
         chain_executor=chain_executor,
         run_repository=InMemoryRunRepository(),
     )
-

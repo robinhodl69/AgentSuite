@@ -18,7 +18,13 @@ class InMemoryRunRepository:
     def get(self, run_id: str) -> RunRecord | None:
         return self._runs.get(run_id)
 
+    def list(self) -> list[RunRecord]:
+        return sorted(
+            self._runs.values(),
+            key=lambda run: run.created_at,
+            reverse=True,
+        )
+
     def audit(self, run_id: str) -> list[AuditEvent] | None:
         record = self.get(run_id)
         return record.audit_log if record else None
-

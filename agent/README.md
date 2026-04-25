@@ -102,6 +102,7 @@ OPENAI_API_KEY=
 OPENAI_MODEL_FAST=gpt-4.1-mini
 OPENAI_MODEL_REASONING=gpt-4.1
 OPENAI_TEMPERATURE=0.1
+AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 MONAD_CHAIN_ID=10143
 MONAD_RPC_URL=https://testnet-rpc.monad.xyz
 MONAD_EXPLORER_URL=https://testnet.monadexplorer.com
@@ -174,6 +175,21 @@ pytest -q
 3. Entra a `/erp/finanzas`.
 4. Ejecuta un proceso.
 5. Revisa el output en la consola y en `/erp/finanzas/historial`.
+
+## Demo con frontend en Vercel
+
+La forma mas simple para demo es:
+
+1. levantar este backend en local,
+2. abrir un tunel HTTPS con `ngrok http 8000` o `cloudflared`,
+3. agregar el dominio publico del tunel y el dominio de Vercel en `AGENT_CORS_ORIGINS`,
+4. configurar `VITE_AGENT_API_URL` en Vercel apuntando al tunel.
+
+Ejemplo:
+
+```env
+AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://tu-app.vercel.app,https://abc123.ngrok-free.app
+```
 
 ## Limitaciones actuales del MVP
 

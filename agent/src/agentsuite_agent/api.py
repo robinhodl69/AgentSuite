@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .chain import BaseChainExecutor, MonadChainExecutor
@@ -34,6 +35,15 @@ def create_app(
 
     app = FastAPI(title="AgentSuite Agent API", version="0.1.0")
     app.state.runner = runner
+
+    if resolved_settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=list(resolved_settings.cors_origins),
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
     @app.exception_handler(AgentSuiteError)
     async def agent_exception_handler(_, exc: AgentSuiteError):

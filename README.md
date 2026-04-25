@@ -73,6 +73,23 @@ La consola financiera queda en:
 - `http://localhost:5173/erp/finanzas`
 - historial: `http://localhost:5173/erp/finanzas/historial`
 
+## Demo con frontend en Vercel
+
+La opcion mas simple para demo es mantener `agent/` corriendo en local y exponerlo con un tunel HTTPS.
+
+Pasos:
+
+1. levantar el backend local,
+2. abrir un tunel como `ngrok http 8000`,
+3. agregar el dominio del tunel y el dominio de Vercel a `AGENT_CORS_ORIGINS`,
+4. configurar en Vercel `VITE_AGENT_API_URL=https://tu-tunel-publico`.
+
+Ejemplo en `agent/.env`:
+
+```env
+AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://tu-app.vercel.app,https://abc123.ngrok-free.app
+```
+
 ### Contratos
 
 ```bash

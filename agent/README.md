@@ -103,6 +103,7 @@ OPENAI_MODEL_FAST=gpt-4.1-mini
 OPENAI_MODEL_REASONING=gpt-4.1
 OPENAI_TEMPERATURE=0.1
 AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+AGENT_CORS_ORIGIN_REGEX=https://.*\\.vercel\\.app
 MONAD_CHAIN_ID=10143
 MONAD_RPC_URL=https://testnet-rpc.monad.xyz
 MONAD_EXPLORER_URL=https://testnet.monadexplorer.com
@@ -188,7 +189,8 @@ La forma mas simple para demo es:
 Ejemplo:
 
 ```env
-AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://tu-app.vercel.app,https://abc123.ngrok-free.app
+AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://abc123.ngrok-free.app
+AGENT_CORS_ORIGIN_REGEX=https://.*\\.vercel\\.app
 ```
 
 ## Limitaciones actuales del MVP

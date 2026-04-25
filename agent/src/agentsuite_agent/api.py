@@ -36,10 +36,11 @@ def create_app(
     app = FastAPI(title="AgentSuite Agent API", version="0.1.0")
     app.state.runner = runner
 
-    if resolved_settings.cors_origins:
+    if resolved_settings.cors_origins or resolved_settings.cors_origin_regex:
         app.add_middleware(
             CORSMiddleware,
             allow_origins=list(resolved_settings.cors_origins),
+            allow_origin_regex=resolved_settings.cors_origin_regex,
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],

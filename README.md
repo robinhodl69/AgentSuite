@@ -87,7 +87,8 @@ Pasos:
 Ejemplo en `agent/.env`:
 
 ```env
-AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://tu-app.vercel.app,https://abc123.ngrok-free.app
+AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://abc123.ngrok-free.app
+AGENT_CORS_ORIGIN_REGEX=https://.*\\.vercel\\.app
 ```
 
 ### Contratos

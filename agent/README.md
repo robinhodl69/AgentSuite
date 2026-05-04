@@ -22,7 +22,7 @@ Cada corrida genera:
 - `final_output`
 - `audit_log`
 
-Actualmente el historial vive en memoria del backend. Mientras el proceso siga corriendo, la UI puede consultar ejecuciones, auditoria y output. Si reinicias el backend, ese historial se pierde.
+El backend ya puede persistir corridas y auditoria en base de datos. Para despliegues o pilotos la ruta recomendada es PostgreSQL; en desarrollo local tambien puede auto-crear una base SQLite si no configuras `DATABASE_URL`.
 
 ## Tareas que ejecuta hoy
 
@@ -76,6 +76,19 @@ Que hace:
 
 ## Endpoints disponibles
 
+- `GET /api/v1/health`
+- `GET /api/v1/agent/runs`
+- `GET /api/v1/agent/runs/{run_id}`
+- `GET /api/v1/agent/runs/{run_id}/audit`
+- `POST /api/v1/agent/runs/reconciliation`
+- `POST /api/v1/agent/runs/payments/evaluate`
+- `POST /api/v1/agent/runs/payments/approve`
+- `POST /api/v1/agent/runs/budgets`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/refresh`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/users`
 - `GET /health`
 - `GET /agent/runs`
 - `GET /agent/runs/{run_id}`
@@ -102,7 +115,17 @@ OPENAI_API_KEY=
 OPENAI_MODEL_FAST=gpt-4.1-mini
 OPENAI_MODEL_REASONING=gpt-4.1
 OPENAI_TEMPERATURE=0.1
-AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+DATABASE_URL=postgresql+psycopg://agentsuite:agentsuite@127.0.0.1:5432/agentsuite
+DATABASE_ECHO=false
+DATABASE_AUTO_CREATE=false
+SESSION_COOKIE_NAME=agentsuite_session
+SESSION_TTL_HOURS=12
+SESSION_COOKIE_SECURE=false
+BOOTSTRAP_COMPANY_ID=demo-company
+BOOTSTRAP_COMPANY_NAME=AgentSuite Demo Workspace
+BOOTSTRAP_ADMIN_EMAIL=finance@company.com
+BOOTSTRAP_ADMIN_PASSWORD=change-this-password
+AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173
 AGENT_CORS_ORIGIN_REGEX=https://.*\\.vercel\\.app
 MONAD_CHAIN_ID=10143
 MONAD_RPC_URL=https://testnet-rpc.monad.xyz
@@ -134,6 +157,47 @@ cd /home/robinhodl/projectsAi/agentsuite/agent
 source .venv/bin/activate
 pip install -e ".[dev]"
 ```
+
+## Migraciones
+
+Para una base PostgreSQL real:
+
+```bash
+cd /home/robinhodl/projectsAi/agentsuite/agent
+source .venv/bin/activate
+alembic upgrade head
+```
+
+Si trabajas sin `DATABASE_URL`, el backend puede auto-crear una base SQLite local cuando `DATABASE_AUTO_CREATE=true`.
+
+## Acceso inicial
+
+El backend crea un workspace y un usuario administrador inicial usando `BOOTSTRAP_COMPANY_ID`, `BOOTSTRAP_COMPANY_NAME`, `BOOTSTRAP_ADMIN_EMAIL` y `BOOTSTRAP_ADMIN_PASSWORD`.
+
+Flujo recomendado:
+
+1. configura esas tres variables en `agent/.env`,
+2. opcionalmente ajusta `BOOTSTRAP_COMPANY_NAME` para el nombre del workspace demo,
+3. corre `alembic upgrade head`,
+4. levanta el backend y entra al frontend,
+5. inicia sesion con ese usuario para crear el resto de cuentas via `POST /api/v1/auth/users`.
+
+## Observabilidad minima
+
+- cada respuesta HTTP devuelve `x-request-id`,
+- el backend escribe logs estructurados por request y por cambio de estado de run,
+- `GET /api/v1/health` valida conectividad con la base y responde `{"status":"ok","database":"ok"}` cuando todo esta sano.
+
+## Docker Compose
+
+Desde la raiz del repo:
+
+```bash
+cp .env.compose.example .env.compose
+docker compose --env-file .env.compose up --build
+```
+
+El stack levanta PostgreSQL, payments, agent y frontend con health checks y migraciones en arranque.
 
 ## Levantar el backend
 
@@ -176,6 +240,7 @@ pytest -q
 3. Entra a `/erp/finanzas`.
 4. Ejecuta un proceso.
 5. Revisa el output en la consola y en `/erp/finanzas/historial`.
+6. Si tu rol es `viewer`, el frontend queda en modo solo lectura.
 
 ## Demo con frontend en Vercel
 
@@ -195,7 +260,6 @@ AGENT_CORS_ORIGIN_REGEX=https://.*\\.vercel\\.app
 
 ## Limitaciones actuales del MVP
 
-- el historial no persiste entre reinicios,
+- Finance es el unico modulo operativo real; los demas siguen como previews del roadmap,
 - los pagos reales estan conectados a Monad testnet, no mainnet,
-- el contrato de pagos usa tesoreria del contrato,
-- la persistencia de runs y auditoria aun no usa base de datos.
+- el contrato de pagos usa tesoreria del contrato.

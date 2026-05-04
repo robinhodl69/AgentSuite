@@ -15,9 +15,19 @@ class ProcessType(str, Enum):
 
 
 class RunStatus(str, Enum):
+    QUEUED = "queued"
+    RUNNING = "running"
     COMPLETED = "completed"
     REQUIRES_REVIEW = "requires_review"
     BLOCKED = "blocked"
+    FAILED = "failed"
+
+
+class UserRole(str, Enum):
+    FINANCE_ADMIN = "finance_admin"
+    ACCOUNTANT = "accountant"
+    TREASURER = "treasurer"
+    VIEWER = "viewer"
 
 
 class AuditEvent(BaseModel):
@@ -79,8 +89,6 @@ class SupplierInvoice(BaseModel):
     discount_deadline: date | None = None
     strategic: bool = False
     status: str = "pending"
-    beneficiary_reference: str | None = None
-    beneficiary_address: str | None = None
 
 
 class CashPosition(BaseModel):
@@ -137,13 +145,6 @@ class ReconciliationReviewItem(BaseModel):
     reason: str
 
 
-class ChainExecutionResult(BaseModel):
-    status: Literal["simulated", "executed"]
-    tx_hash: str
-    explorer_url: str
-    network: str = "Monad Testnet"
-
-
 class PaymentDecision(BaseModel):
     invoice_id: str
     supplier_name: str
@@ -160,8 +161,13 @@ class PaymentDecision(BaseModel):
         "executed",
     ]
     reason: str
-    tx_hash: str | None = None
-    explorer_url: str | None = None
+    spend_request_id: str | None = None
+    credential_status: Literal["pending_approval", "approved", "denied", "expired", "created"] | None = None
+    card_last4: str | None = None
+    card_exp_month: int | None = None
+    card_exp_year: int | None = None
+    approval_url: str | None = None
+    valid_until: str | None = None
 
 
 class BudgetDecision(BaseModel):
@@ -211,6 +217,28 @@ class BudgetControlRequest(BaseModel):
     categorization_rules: dict[str, str] = Field(default_factory=dict)
 
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class CreateUserRequest(BaseModel):
+    email: str
+    password: str
+    role: UserRole
+
+
+class AuthUser(BaseModel):
+    user_id: str
+    company_id: str
+    email: str
+    role: UserRole
+
+
+class AuthSessionResponse(BaseModel):
+    user: AuthUser
+
+
 class RunRecord(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -218,5 +246,8 @@ class RunRecord(BaseModel):
     process_type: ProcessType
     status: RunStatus
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    company_id: str = "demo-company"
+    actor_role: str | None = None
+    input_payload: dict[str, Any] | None = None
     final_output: dict[str, Any]
     audit_log: list[AuditEvent]

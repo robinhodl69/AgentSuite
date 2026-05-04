@@ -4,13 +4,23 @@
   "execution_mode": "evaluate",
   "invoices": [
     {
-      "invoice_id": "SUP-100",
+      "invoice_id": "SUP-300",
       "supplier_name": "Proveedor XYZ",
       "issued_at": "2026-04-01",
       "due_at": "2026-04-20",
       "amount_due": 10000.0,
       "early_payment_discount_percent": 2.0,
       "discount_deadline": "2099-04-10",
+      "strategic": true
+    },
+    {
+      "invoice_id": "SUP-310",
+      "supplier_name": "Proveedor Logistico Norte",
+      "issued_at": "2026-04-04",
+      "due_at": "2026-04-24",
+      "amount_due": 6800.0,
+      "early_payment_discount_percent": 1.8,
+      "discount_deadline": "2099-04-15",
       "strategic": true
     },
     {
@@ -41,4 +51,3 @@
     "require_manual_approval_over": 9000.0
   }
 }
-

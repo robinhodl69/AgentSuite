@@ -1,5 +1,5 @@
 export type ErpModule = {
-  slug: 'finanzas' | 'compras' | 'operaciones' | 'rrhh'
+  slug: string
   title: string
   description: string
   status: string
@@ -7,64 +7,145 @@ export type ErpModule = {
   href: string
   cta: string
   featured?: boolean
+  icon: string
 }
 
 export const erpModules: ErpModule[] = [
   {
-    slug: 'finanzas',
-    title: 'Finanzas',
+    slug: 'mail',
+    title: 'Mail',
     description:
-      'Tesoreria, pagos y control presupuestal operados desde una consola financiera con agentes.',
-    href: '/erp/finanzas',
-    cta: 'Entrar',
-    status: 'Activo',
+      'Email-first intake, message triage, and agent-triggered workflow routing across the ERP.',
+    href: '/erp/mail',
+    cta: 'Open',
+    status: 'Live',
     featured: true,
+    icon: 'mail',
     processes: [
-      'Conciliacion bancaria asistida',
-      'Revision de pagos a proveedores',
-      'Control presupuestal por area',
+      'Inbound request classification',
+      'Trigger agent workflows from email',
+      'Approval and exception routing',
     ],
   },
   {
-    slug: 'compras',
-    title: 'Compras',
+    slug: 'finance',
+    title: 'Finance',
     description:
-      'Solicitudes, abastecimiento y aprobaciones para controlar el ciclo completo de compra.',
-    status: 'Preview',
-    href: '/erp/compras',
-    cta: 'Ver modulo',
+      'Treasury, bank reconciliation, supplier payments, and budget control operated by agents.',
+    href: '/erp/finance',
+    cta: 'Operate',
+    status: 'Live',
+    featured: true,
+    icon: 'finance',
     processes: [
-      'Solicitud de compra con aprobacion por monto',
-      'Comparativo automatico de proveedores',
-      'Seguimiento de ordenes y recepcion',
+      'AI-assisted bank reconciliation',
+      'Supplier payment evaluation and execution',
+      'Budget control with preventive alerts',
     ],
   },
   {
-    slug: 'operaciones',
-    title: 'Operaciones',
+    slug: 'procurement',
+    title: 'Procurement',
     description:
-      'Seguimiento diario de ejecucion, incidencias y cumplimiento operativo por equipo.',
-    status: 'Preview',
-    href: '/erp/operaciones',
-    cta: 'Ver modulo',
+      'Intelligent sourcing, vendor scoring, and purchase order optimization.',
+    status: 'In development',
+    href: '/erp/procurement',
+    cta: 'Preview',
+    icon: 'procurement',
     processes: [
-      'Asignacion de tareas por turno y prioridad',
-      'Control de incidencias y escalamiento',
-      'Monitoreo diario de cumplimiento operativo',
+      'Purchase order evaluation by policy',
+      'Automatic vendor scoring',
+      'Contract renewal and compliance tracking',
     ],
   },
   {
-    slug: 'rrhh',
-    title: 'RR. HH.',
+    slug: 'inventory',
+    title: 'Inventory',
     description:
-      'Procesos de personas, ausencias e incidencias internas en un solo espacio operativo.',
-    status: 'Preview',
-    href: '/erp/rrhh',
-    cta: 'Ver modulo',
+      'Demand forecasting, automatic replenishment, and stock reconciliation.',
+    status: 'In development',
+    href: '/erp/inventory',
+    cta: 'Preview',
+    icon: 'inventory',
     processes: [
-      'Alta de colaborador con checklist de onboarding',
-      'Solicitud de vacaciones y ausencias',
-      'Revision y aprobacion de incidencias',
+      'SKU-level demand forecasting',
+      'Automatic replenishment with thresholds',
+      'Cycle count reconciliation',
+    ],
+  },
+  {
+    slug: 'sales',
+    title: 'Sales & CRM',
+    description:
+      'Lead scoring, quote generation, and pipeline risk detection.',
+    status: 'In development',
+    href: '/erp/sales',
+    cta: 'Preview',
+    icon: 'sales',
+    processes: [
+      'Lead scoring and enrichment',
+      'Quote generation with policy',
+      'Opportunity risk detection',
+    ],
+  },
+  {
+    slug: 'operations',
+    title: 'Operations',
+    description:
+      'Production planning, quality control, and predictive maintenance.',
+    status: 'In development',
+    href: '/erp/operations',
+    cta: 'Preview',
+    icon: 'operations',
+    processes: [
+      'Production planning and capacity',
+      'Quality control with rejection threshold',
+      'Predictive maintenance by asset',
+    ],
+  },
+  {
+    slug: 'hr',
+    title: 'Human Resources',
+    description:
+      'Payroll validation, expense compliance, and headcount forecasting.',
+    status: 'In development',
+    href: '/erp/hr',
+    cta: 'Preview',
+    icon: 'hr',
+    processes: [
+      'Payroll and deduction validation',
+      'Expense policy compliance',
+      'Headcount and turnover forecasting',
+    ],
+  },
+  {
+    slug: 'projects',
+    title: 'Projects',
+    description:
+      'Budget vs. actual tracking, milestone risk, and resource allocation.',
+    status: 'In development',
+    href: '/erp/projects',
+    cta: 'Preview',
+    icon: 'projects',
+    processes: [
+      'Budget vs. actual tracking',
+      'Milestone risk detection',
+      'Optimal resource allocation',
+    ],
+  },
+  {
+    slug: 'analytics',
+    title: 'Analytics',
+    description:
+      'Natural language queries, anomaly detection, and predictive alerts.',
+    status: 'In development',
+    href: '/erp/analytics',
+    cta: 'Preview',
+    icon: 'analytics',
+    processes: [
+      'Natural language data queries',
+      'Automatic anomaly detection',
+      'Predictive KPI alerts',
     ],
   },
 ]

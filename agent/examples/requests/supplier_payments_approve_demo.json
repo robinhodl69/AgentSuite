@@ -2,12 +2,12 @@
   "company_id": "demo-company",
   "actor_role": "treasurer",
   "approved_invoice_ids": [
-    "SUP-100"
+    "SUP-300"
   ],
   "execution_mode": "simulate",
   "invoices": [
     {
-      "invoice_id": "SUP-100",
+      "invoice_id": "SUP-300",
       "supplier_name": "Proveedor XYZ",
       "issued_at": "2026-04-01",
       "due_at": "2026-04-20",
@@ -34,4 +34,3 @@
     "require_manual_approval_over": 9000.0
   }
 }
-

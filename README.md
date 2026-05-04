@@ -1,65 +1,175 @@
 # AgentSuite
 
-AgentSuite es un demo full-stack para operaciones financieras asistidas por agentes. El proyecto combina un backend con FastAPI y LangGraph, un contrato inteligente en Monad testnet para pagos de proveedor y un frontend React para operar procesos desde una consola tipo ERP.
+> **The Agentic ERP. Autonomous operations, human oversight.**
 
-## Estructura del proyecto
+AgentSuite is a next-generation **Agentic ERP** — not a traditional dashboard with forms, but an autonomous operations platform where AI agents execute business processes in the background while humans review, approve, and steer.
 
-| Carpeta | Propósito |
+Traditional ERPs are passive databases. AgentSuite is active: agents run reconciliation, evaluate supplier payments, monitor budgets, and surface decisions for approval. You operate through intent, not clicks.
+
+---
+
+## What makes it Agentic
+
+| Traditional ERP | AgentSuite |
 | --- | --- |
-| `agent/` | Backend del agente financiero. Ejecuta conciliación bancaria, pagos a proveedores y control presupuestal. |
-| `contracts/` | Workspace Foundry para el contrato `SupplierPaymentExecutor` en Monad testnet. |
-| `frontend/` | Interfaz React/Vite para disparar procesos, ver output, auditoría e historial. |
+| Manual data entry | Agents ingest and normalize inputs automatically |
+| Static reports | Agents analyze and flag exceptions in real time |
+| Rigid workflows | Agents route decisions through policy + human approval |
+| Module silos | Cross-module agents that understand context |
 
-## Qué hace hoy
+Every process follows an autonomous pipeline:
 
-### 1. Conciliación bancaria
+```
+Intent → Intake → Normalize → Skill Selection → Analysis → Policy → Action → Response
+```
 
-- recibe un CSV de movimientos,
-- cruza contra ventas y gastos,
-- devuelve coincidencias, faltantes y casos que requieren revisión.
+Humans intervene at **policy** (thresholds) and **action** (approvals). Everything else runs autonomously.
 
-### 2. Pagos a proveedores
+---
 
-- evalúa descuento por pronto pago,
-- aplica políticas de caja y aprobación,
-- puede **evaluar**, **simular** o **ejecutar** el pago,
-- en `execute`, envía una transacción real en **Monad testnet** a través de `SupplierPaymentExecutor`.
+## Modules
 
-### 3. Control presupuestal
+| Module | Status | Agent Capabilities |
+| --- | --- | --- |
+| **Finance** | Live | Bank reconciliation, supplier payment evaluation, budget control |
+| **Procurement** | Coming Soon | Purchase order optimization, vendor scoring, contract renewal alerts |
+| **Inventory** | Coming Soon | Demand forecasting, reorder automation, stock reconciliation |
+| **Sales & CRM** | Coming Soon | Lead scoring, quote generation, pipeline risk detection |
+| **Operations** | Coming Soon | Production scheduling, quality control, maintenance predictions |
+| **Human Resources** | Coming Soon | Payroll validation, expense compliance, headcount forecasting |
+| **Projects** | Coming Soon | Budget vs. actual tracking, milestone risk, resource allocation |
+| **Analytics** | Coming Soon | Natural language queries, anomaly detection, predictive alerts |
 
-- revisa gastos contra presupuestos mensuales,
-- categoriza cuando hace falta,
-- marca gastos como aprobados, alertados, pendientes o bloqueados.
+Each module exposes three execution modes:
 
-## Cómo se conectan las partes
+- **Evaluate** — Run analysis without side effects. See what the agent would do.
+- **Simulate** — Execute against test data or sandbox environments.
+- **Execute** — Run with real credentials, requiring human approval at critical gates.
 
-1. El usuario opera desde `frontend/`.
-2. El frontend llama al backend en `agent/`.
-3. El backend corre una workflow con etapas `intake -> normalize -> skill_selection -> analysis -> policy -> action -> response`.
-4. Para pagos reales, el backend firma y envía una llamada al contrato desplegado en `contracts/`.
-5. La UI muestra resumen, output estructurado, auditoría e historial de la sesión.
+---
 
-## Levantar el proyecto
+## Live Capabilities
 
-### Backend del agente
+### 1. Bank Reconciliation
+- Ingests CSV statements
+- Matches transactions against invoices and expenses using heuristic scoring + LLM disambiguation
+- Returns matches, unmatched movements, ledger orphans, and manual review items
+
+### 2. Supplier Payments
+- Evaluates early-payment discounts against cash position and policy thresholds
+- Generates one-time virtual payment credentials via Stripe Link (or mock mode for local dev)
+- Requires human approval for execution; simulates safely for testing
+
+### 3. Budget Control
+- Tracks expenses against monthly budgets
+- Auto-categorizes via keyword rules + LLM fallback
+- Surfaces preventive alerts and hard blocks when thresholds are exceeded
+
+---
+
+## Architecture
+
+AgentSuite is composed of three independent services designed for production deployment and fast local development.
+
+| Service | Stack | Responsibility |
+| --- | --- | --- |
+| **Agent Core** | Python, FastAPI, LangGraph | Workflow engine, process services, LLM orchestration |
+| **Payments Gateway** | Node.js, Express | Wrapper around Stripe Link CLI for secure one-time credentials |
+| **Console** | React, Vite, Tailwind | Human interface for intent, review, approval, and audit |
+
+```
+┌─────────────┐     HTTP      ┌──────────────┐     HTTP      ┌─────────────────┐
+│   Console   │──────────────→│  Agent Core  │──────────────→│ Payments Gateway│
+│  (React)    │               │(FastAPI+Graph)│               │ (Stripe Link)   │
+└─────────────┘               └──────────────┘               └─────────────────┘
+                                     ↓
+                              ┌──────────────┐
+                              │  LLM (OpenAI)│
+                              │(disambiguate,│
+                              │ categorize)  │
+                              └──────────────┘
+```
+
+### Frontend UI system
+
+The ERP console now uses a **free enterprise UI stack** based on:
+
+- **Ant Design** for core components,
+- **Ant Design ProComponents** for backoffice patterns such as enterprise tables,
+- **Tailwind** only for layout and fine-grained visual adjustments.
+
+UI implementation follows an **Atomic Design** hierarchy:
+
+| Layer | Responsibility |
+| --- | --- |
+| `pages/` | Route-level data loading and composition |
+| `templates/` | Page structure and shell composition |
+| `organisms/` | Complex ERP surfaces like module catalogs, workbenches, selectors, and list-detail screens |
+| `molecules/` | Small reusable interaction groups |
+| `atoms/` | Wrapped visual primitives aligned to the theme |
+
+Governance rules:
+
+1. Prefer wrappers from `frontend/src/components/ui/` or `frontend/src/components/atoms/` over scattering raw `antd` usage.
+2. Keep theme tokens centralized in `frontend/src/lib/ui-theme.tsx`.
+3. Reuse existing organisms and templates before creating page-specific one-off components.
+4. Treat Tailwind as a layout aid, not as a parallel design system.
+
+Reference file: `frontend/src/lib/ui-governance.ts`
+
+---
+
+## Local Development
+
+AgentSuite runs 100% on your machine. No cloud dependencies required.
+
+### Prerequisites
+- Python 3.12+
+- Node.js 20+
+- OpenAI API key (for LLM disambiguation and categorization)
+- PostgreSQL for durable run history in deployed environments
+
+### 1. Payments Gateway
+
+```bash
+cd agent/payments
+npm install
+```
+
+**Option A — Mock mode (no Stripe required):**
+```bash
+MOCK_PAYMENTS=true npm run dev
+```
+
+**Option B — Real Stripe Link (requires authentication):**
+```bash
+npm run dev
+# Then authenticate:
+# node node_modules/.bin/link-cli auth login
+```
+
+Service runs at `http://127.0.0.1:3001` (localhost only, never exposed).
+
+### 2. Agent Core
 
 ```bash
 cd agent
 cp .env.example .env
-# llena OPENAI_API_KEY y, para pagos reales, MONAD_DEPLOYER_PRIVATE_KEY
+# Edit .env and add OPENAI_API_KEY
+# Configure DATABASE_URL and bootstrap admin credentials
 
 source .venv/bin/activate
 pip install -e ".[dev]"
+alembic upgrade head
 agentsuite-agent
 ```
 
 Healthcheck:
-
 ```bash
 curl http://localhost:8000/health
 ```
 
-### Frontend
+### 3. Console
 
 ```bash
 cd frontend
@@ -68,49 +178,106 @@ npm install
 npm run dev
 ```
 
-La consola financiera queda en:
+Open `http://localhost:5173`
 
-- `http://localhost:5173/erp/finanzas`
-- historial: `http://localhost:5173/erp/finanzas/historial`
+---
 
-## Demo con frontend en Vercel
+## Docker Compose demo stack
 
-La opcion mas simple para demo es mantener `agent/` corriendo en local y exponerlo con un tunel HTTPS.
-
-Pasos:
-
-1. levantar el backend local,
-2. abrir un tunel como `ngrok http 8000`,
-3. agregar el dominio del tunel y el dominio de Vercel a `AGENT_CORS_ORIGINS`,
-4. configurar en Vercel `VITE_AGENT_API_URL=https://tu-tunel-publico`.
-
-Ejemplo en `agent/.env`:
-
-```env
-AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://abc123.ngrok-free.app
-AGENT_CORS_ORIGIN_REGEX=https://.*\\.vercel\\.app
-```
-
-### Contratos
+For a controlled demo or pilot-like local environment:
 
 ```bash
-cd contracts
-forge build
-forge test
+cp .env.compose.example .env.compose
+# Edit .env.compose and set OPENAI_API_KEY plus bootstrap credentials
+docker compose --env-file .env.compose up --build
 ```
 
-## Variables sensibles
+Services:
 
-No subas secretos al repositorio. Estos archivos ya deben mantenerse locales:
+- **Console**: `http://localhost:4173`
+- **Agent Core**: `http://localhost:8000`
+- **Payments Gateway**: `http://localhost:3001`
+- **PostgreSQL**: `localhost:5432`
 
-- `agent/.env`
-- `frontend/.env`
-- `contracts/.env`
+The compose stack runs:
 
-## Estado actual del MVP
+- PostgreSQL with health checks,
+- Agent Core with Alembic migrations on startup,
+- Payments in mock mode by default,
+- Console built for direct API access using `VITE_AGENT_API_URL`,
+- a bootstrap admin and demo workspace from `.env.compose`.
 
-- los 3 procesos ya se pueden ejecutar desde el frontend,
-- pagos reales funcionan en Monad testnet,
-- el output incluye `tx_hash` y link al explorer,
-- el historial funciona mientras el backend siga corriendo,
-- la persistencia de corridas todavía es en memoria.
+---
+
+## Environment Variables
+
+Keep these local. Never commit `.env` files.
+
+### Agent Core (`agent/.env`)
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL_FAST=gpt-4.1-mini
+OPENAI_MODEL_REASONING=gpt-4.1
+OPENAI_TEMPERATURE=0.1
+DATABASE_URL=postgresql+psycopg://agentsuite:agentsuite@127.0.0.1:5432/agentsuite
+DATABASE_ECHO=false
+DATABASE_AUTO_CREATE=false
+SESSION_COOKIE_NAME=agentsuite_session
+SESSION_TTL_HOURS=12
+SESSION_COOKIE_SECURE=false
+BOOTSTRAP_COMPANY_ID=demo-company
+BOOTSTRAP_COMPANY_NAME=AgentSuite Demo Workspace
+BOOTSTRAP_ADMIN_EMAIL=finance@company.com
+BOOTSTRAP_ADMIN_PASSWORD=change-this-password
+AGENT_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173
+PAYMENTS_SERVICE_URL=http://127.0.0.1:3001
+```
+
+### Console (`frontend/.env`)
+```env
+VITE_AGENT_API_URL=http://127.0.0.1:8000
+```
+
+---
+
+## Testing
+
+```bash
+cd agent
+source .venv/bin/activate
+pytest test/test_api.py -v
+```
+
+All tests run against mock dependencies. No Stripe account or network calls required.
+
+---
+
+## CI
+
+GitHub Actions now validates the repo with:
+
+- backend tests,
+- frontend lint + build,
+- payments service build.
+
+Workflow file: `.github/workflows/ci.yml`
+
+---
+
+## Roadmap
+
+- [x] Finance agent (reconciliation, payments, budgets)
+- [ ] Procurement agent (PO optimization, vendor scoring)
+- [ ] Inventory agent (demand forecasting, auto-reorder)
+- [ ] Sales agent (lead scoring, quote generation)
+- [ ] Cross-module context sharing
+- [x] Persistent run history (database-backed)
+- [ ] Multi-tenant workspace support
+- [ ] Audit trail with cryptographic signatures
+
+---
+
+## License
+
+MIT

@@ -9,6 +9,7 @@ contracts/.env
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+.env.compose
 frontend/FRONTEND_EXECUTION_PLAN.md
 __pycache__/
 *.py[cod]

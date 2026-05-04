@@ -7,7 +7,6 @@ from datetime import UTC, date, datetime
 from io import StringIO
 from typing import Any
 
-from .chain import BaseChainExecutor
 from .errors import ExecutionError
 from .llm import BaseLLMClient
 from .models import (
@@ -33,10 +32,6 @@ def _money(value: float, decimals: int = 2) -> float:
     return round(value + 1e-9, decimals)
 
 
-def _currency_decimals(currency: str | None) -> int:
-    return 6 if (currency or "").strip().upper() == "MON" else 2
-
-
 def _parse_date(value: str | date) -> date:
     if isinstance(value, date):
         return value
@@ -55,7 +50,7 @@ def _normalize_text(value: str | None) -> str:
 
 def _month_label(values: list[date]) -> str:
     if not values:
-        return "sin periodo"
+        return "no period"
     periods = [(value.year, value.month) for value in values]
     common = max(set(periods), key=periods.count)
     return datetime(common[0], common[1], 1).strftime("%B %Y")
@@ -142,7 +137,6 @@ class ProcessService(ABC):
         analysis: dict[str, Any],
         policy: dict[str, Any],
         run_id: str,
-        chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
         raise NotImplementedError
 
@@ -294,7 +288,6 @@ class ReconciliationService(ProcessService):
         analysis: dict[str, Any],
         policy: dict[str, Any],
         run_id: str,
-        chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
         return {"actions": []}
 
@@ -309,9 +302,9 @@ class ReconciliationService(ProcessService):
         bank_transactions: list[BankTransaction] = normalized_inputs["bank_transactions"]
         period = _month_label([transaction.posted_at for transaction in bank_transactions])
         summary = (
-            f"Revisé el extracto de {period}: {len(analysis['matches'])} transacciones conciliadas, "
-            f"{len(analysis['bank_only'])} movimientos bancarios sin contabilización y "
-            f"{len(analysis['ledger_only'])} registros contables sin movimiento bancario."
+            f"Reviewed {period} statement: {len(analysis['matches'])} reconciled transactions, "
+            f"{len(analysis['bank_only'])} unaccounted bank movements, and "
+            f"{len(analysis['ledger_only'])} ledger records without bank backing."
         )
         return {
             "process": self.process_type,
@@ -352,7 +345,6 @@ class SupplierPaymentService(ProcessService):
         llm_client: BaseLLMClient,
     ) -> dict[str, Any]:
         request: SupplierPaymentRequest = normalized_inputs["request"]
-        amount_decimals = _currency_decimals(request.cash_position.currency)
         available_cash = (
             request.cash_position.available_balance
             - request.cash_position.reserved_balance
@@ -366,9 +358,8 @@ class SupplierPaymentService(ProcessService):
             discounted_amount = _money(
                 invoice.amount_due
                 * (1 - (invoice.early_payment_discount_percent / 100)),
-                amount_decimals,
             )
-            savings = _money(invoice.amount_due - discounted_amount, amount_decimals)
+            savings = _money(invoice.amount_due - discounted_amount)
             if not invoice.strategic:
                 decisions.append(
                     PaymentDecision(
@@ -479,46 +470,80 @@ class SupplierPaymentService(ProcessService):
         analysis: dict[str, Any],
         policy: dict[str, Any],
         run_id: str,
-        chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
+        import httpx
+        from .config import Settings
+
         request: SupplierPaymentRequest = normalized_inputs["request"]
-        invoices_by_id = {invoice.invoice_id: invoice for invoice in request.invoices}
         executed: list[PaymentDecision] = []
         if request.execution_mode == "evaluate":
             return {"executed_payments": executed}
 
+        settings = Settings.from_env()
+        payments_url = settings.payments_service_url.rstrip("/")
+
         for decision in analysis["decisions"]:
             if decision.status != "ready_to_pay":
                 continue
-            invoice = invoices_by_id.get(decision.invoice_id)
-            if invoice is None:
-                raise ExecutionError(
-                    f"Invoice {decision.invoice_id} is missing from the normalized supplier payload."
+
+            amount_cents = int(decision.discounted_amount * 100)
+            context = (
+                f"AgentSuite payment run {run_id}: paying invoice {decision.invoice_id} "
+                f"to supplier {decision.supplier_name} for discounted amount {decision.discounted_amount}. "
+                f"This is an automated supplier payment initiated from the ERP finance console."
+            )
+
+            payload = {
+                "payment_method_id": "default",
+                "merchant_name": decision.supplier_name,
+                "merchant_url": "https://agentsuite.local/erp/finanzas",
+                "context": context,
+                "amount": amount_cents,
+                "currency": request.cash_position.currency,
+                "line_items": [
+                    {
+                        "name": f"Invoice {decision.invoice_id}",
+                        "unit_amount": amount_cents,
+                        "quantity": 1,
+                    }
+                ],
+                "total": {
+                    "type": "total",
+                    "display_text": "Total",
+                    "amount": amount_cents,
+                },
+                "test": request.execution_mode == "simulate",
+                "request_approval": request.execution_mode == "execute",
+            }
+
+            try:
+                resp = httpx.post(
+                    f"{payments_url}/spend-request",
+                    json=payload,
+                    timeout=60.0,
                 )
-            if (
-                request.execution_mode == "execute"
-                and not invoice.beneficiary_address
-            ):
-                raise ExecutionError(
-                    "beneficiary_address is required for execution_mode=execute."
-                )
+                resp.raise_for_status()
+                data = resp.json()
+            except httpx.HTTPStatusError as exc:
+                detail = exc.response.json().get("detail", str(exc))
+                raise ExecutionError(f"Payments service error: {detail}") from exc
+            except Exception as exc:
+                raise ExecutionError(f"Payments service unreachable: {exc}") from exc
+
+            decision.spend_request_id = data.get("id")
+            decision.credential_status = data.get("status")
+            decision.approval_url = data.get("approval_url")
+            card = data.get("card")
+            if card:
+                decision.card_last4 = card.get("last4")
+                decision.card_exp_month = card.get("exp_month")
+                decision.card_exp_year = card.get("exp_year")
+                decision.valid_until = card.get("valid_until")
+
             if request.execution_mode == "simulate":
-                result = chain_executor.simulate_supplier_payment(
-                    decision,
-                    beneficiary_address=invoice.beneficiary_address,
-                    run_id=run_id,
-                    currency=request.cash_position.currency,
-                )
+                decision.status = "simulated"
             else:
-                result = chain_executor.execute_supplier_payment(
-                    decision,
-                    beneficiary_address=invoice.beneficiary_address,
-                    run_id=run_id,
-                    currency=request.cash_position.currency,
-                )
-            decision.status = result.status
-            decision.tx_hash = result.tx_hash
-            decision.explorer_url = result.explorer_url
+                decision.status = "executed"
             executed.append(decision)
 
         return {"executed_payments": executed}
@@ -533,15 +558,12 @@ class SupplierPaymentService(ProcessService):
         request: SupplierPaymentRequest = normalized_inputs["request"]
         decisions: list[PaymentDecision] = analysis["decisions"]
         executed = actions["executed_payments"]
-        total_savings = _money(
-            sum(item.savings_amount for item in executed),
-            _currency_decimals(request.cash_position.currency),
-        )
+        total_savings = _money(sum(item.savings_amount for item in executed))
         summary = (
-            f"Evalué {len(decisions)} facturas de proveedor: {sum(1 for item in decisions if item.status == 'ready_to_pay')} listas para pago, "
-            f"{sum(1 for item in decisions if item.status == 'pending_approval')} pendientes de aprobación y "
-            f"{len(executed)} {request.execution_mode if request.execution_mode != 'evaluate' else 'evaluadas'} "
-            f"con ahorro potencial de ${total_savings:,.2f}."
+            f"Evaluated {len(decisions)} supplier invoices: {sum(1 for item in decisions if item.status == 'ready_to_pay')} ready to pay, "
+            f"{sum(1 for item in decisions if item.status == 'pending_approval')} pending approval, and "
+            f"{len(executed)} {request.execution_mode if request.execution_mode != 'evaluate' else 'evaluated'} "
+            f"with potential savings of ${total_savings:,.2f}."
         )
         return {
             "process": self.process_type,
@@ -692,7 +714,6 @@ class BudgetControlService(ProcessService):
         analysis: dict[str, Any],
         policy: dict[str, Any],
         run_id: str,
-        chain_executor: BaseChainExecutor,
     ) -> dict[str, Any]:
         return {"actions": []}
 
@@ -707,8 +728,8 @@ class BudgetControlService(ProcessService):
         alerted = sum(1 for item in decisions if item.status == "alerted")
         blocked = sum(1 for item in decisions if item.status == "blocked")
         summary = (
-            f"Procesé {len(decisions)} gastos nuevos: {alerted} con alerta preventiva y "
-            f"{blocked} bloqueados por presupuesto."
+            f"Processed {len(decisions)} new expenses: {alerted} with preventive alert and "
+            f"{blocked} blocked by budget."
         )
         return {
             "process": self.process_type,

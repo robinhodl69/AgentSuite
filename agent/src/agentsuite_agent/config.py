@@ -6,6 +6,13 @@ from os import getenv
 from dotenv import load_dotenv
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    value = getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 @dataclass(slots=True)
 class Settings:
     llm_provider: str = "openai"
@@ -14,13 +21,17 @@ class Settings:
     openai_model_reasoning: str = "gpt-4.1"
     openai_temperature: float = 0.1
     cors_origins: tuple[str, ...] = ()
-    cors_origin_regex: str | None = None
-    monad_chain_id: int = 10143
-    monad_rpc_url: str = "https://testnet-rpc.monad.xyz"
-    monad_explorer_url: str = "https://testnet.monadexplorer.com"
-    monad_faucet_url: str = "https://faucet.monad.xyz"
-    monad_deployer_private_key: str | None = None
-    monad_payment_contract_address: str | None = None
+    database_url: str = "sqlite:///./agentsuite-agent.db"
+    database_echo: bool = False
+    database_auto_create: bool = True
+    session_cookie_name: str = "agentsuite_session"
+    session_ttl_hours: int = 12
+    session_cookie_secure: bool = False
+    bootstrap_company_id: str = "demo-company"
+    bootstrap_company_name: str = "AgentSuite Demo Workspace"
+    bootstrap_admin_email: str | None = None
+    bootstrap_admin_password: str | None = None
+    payments_service_url: str = "http://127.0.0.1:3001"
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -30,6 +41,8 @@ class Settings:
             for origin in getenv("AGENT_CORS_ORIGINS", "").split(",")
             if origin.strip()
         )
+        database_url = getenv("DATABASE_URL", "sqlite:///./agentsuite-agent.db")
+        auto_create_default = database_url.startswith("sqlite")
         return cls(
             llm_provider=getenv("LLM_PROVIDER", "openai"),
             openai_api_key=getenv("OPENAI_API_KEY"),
@@ -37,13 +50,21 @@ class Settings:
             openai_model_reasoning=getenv("OPENAI_MODEL_REASONING", "gpt-4.1"),
             openai_temperature=float(getenv("OPENAI_TEMPERATURE", "0.1")),
             cors_origins=cors_origins,
-            cors_origin_regex=getenv("AGENT_CORS_ORIGIN_REGEX") or None,
-            monad_chain_id=int(getenv("MONAD_CHAIN_ID", "10143")),
-            monad_rpc_url=getenv("MONAD_RPC_URL", "https://testnet-rpc.monad.xyz"),
-            monad_explorer_url=getenv(
-                "MONAD_EXPLORER_URL", "https://testnet.monadexplorer.com"
+            database_url=database_url,
+            database_echo=_env_bool("DATABASE_ECHO", False),
+            database_auto_create=_env_bool(
+                "DATABASE_AUTO_CREATE", auto_create_default
             ),
-            monad_faucet_url=getenv("MONAD_FAUCET_URL", "https://faucet.monad.xyz"),
-            monad_deployer_private_key=getenv("MONAD_DEPLOYER_PRIVATE_KEY"),
-            monad_payment_contract_address=getenv("MONAD_PAYMENT_CONTRACT_ADDRESS"),
+            session_cookie_name=getenv("SESSION_COOKIE_NAME", "agentsuite_session"),
+            session_ttl_hours=int(getenv("SESSION_TTL_HOURS", "12")),
+            session_cookie_secure=_env_bool("SESSION_COOKIE_SECURE", False),
+            bootstrap_company_id=getenv("BOOTSTRAP_COMPANY_ID", "demo-company"),
+            bootstrap_company_name=getenv(
+                "BOOTSTRAP_COMPANY_NAME", "AgentSuite Demo Workspace"
+            ),
+            bootstrap_admin_email=getenv("BOOTSTRAP_ADMIN_EMAIL"),
+            bootstrap_admin_password=getenv("BOOTSTRAP_ADMIN_PASSWORD"),
+            payments_service_url=getenv(
+                "PAYMENTS_SERVICE_URL", "http://127.0.0.1:3001"
+            ),
         )

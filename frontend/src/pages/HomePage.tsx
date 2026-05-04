@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom'
 import { PublicSiteLayout } from '../components/layout/PublicSiteLayout'
+import { useScrollDepth } from '../lib/useScrollDepth'
 
-/* ================================================================== */
-/*  Icons — inline SVGs for the ecosystem grid                         */
-/* ================================================================== */
 const IconBanking = () => (
   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
@@ -91,9 +89,110 @@ const integrations = [
   { name: 'KYC / AML', icon: <IconKyc /> },
 ]
 
-/* ================================================================== */
-/*  Section 1 — Hero                                                   */
-/* ================================================================== */
+const heroFlow = [
+  ['Signal', 'Inbox triage and intent extraction'],
+  ['Policy', 'Thresholds, approvals, routing'],
+  ['Sync', 'ERP, banking, tax, CRM updates'],
+  ['Audit', 'Decision trail stored automatically'],
+]
+
+const heroStacks = [
+  { label: 'Mail intake', value: '38 new requests' },
+  { label: 'Policy engine', value: '12 auto-approved' },
+]
+
+function HeroScene3D() {
+  const scrollDepth = useScrollDepth(260)
+  const stageShift = Math.min(scrollDepth * 0.04, 10)
+  const gridShift = Math.min(scrollDepth * 0.07, 16)
+  const panelShift = Math.min(scrollDepth * 0.1, 24)
+  const cardShift = Math.min(scrollDepth * 0.14, 32)
+
+  return (
+    <div className="relative mx-auto hidden w-full max-w-[40rem] lg:block" style={{ perspective: '1600px' }}>
+      <div
+        className="hero-depth-stage relative h-[31rem] w-full rounded-[24px]"
+        style={{ transform: `translate3d(0, ${stageShift}px, 0)` }}
+      >
+        <div
+          className="hero-depth-grid"
+          aria-hidden="true"
+          style={{ transform: `rotateX(68deg) rotateZ(-10deg) translate3d(0, ${gridShift}px, -120px)` }}
+        />
+        <div className="hero-depth-beam" style={{ left: '14%', top: '24%', width: '36%', transform: 'rotate(18deg)' }} />
+        <div className="hero-depth-beam" style={{ right: '17%', top: '27%', width: '28%', transform: 'rotate(-32deg)' }} />
+        <div className="hero-depth-beam" style={{ left: '26%', bottom: '26%', width: '38%', transform: 'rotate(-12deg)' }} />
+
+        <span className="hero-depth-node" style={{ left: '13%', top: '21%' }} />
+        <span className="hero-depth-node" style={{ left: '45%', top: '34%' }} />
+        <span className="hero-depth-node" style={{ right: '17%', top: '24%' }} />
+        <span className="hero-depth-node" style={{ left: '31%', bottom: '25%' }} />
+        <span className="hero-depth-node" style={{ right: '24%', bottom: '21%' }} />
+
+        <div
+          className="hero-depth-panel absolute left-6 right-32 top-14 p-4 font-mono text-[11px]"
+          style={{ transform: `rotateX(16deg) rotateY(-18deg) rotateZ(-7deg) translate3d(0, ${panelShift}px, 36px)` }}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-[var(--as-text-secondary)]">mail.ops.approvals</span>
+            <span className="rounded-[var(--as-radius-sm)] border border-[var(--as-success)]/15 bg-[var(--as-success-subtle)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--as-success)]">
+              Live
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            {heroFlow.map(([stage, message]) => (
+              <div key={stage} className="flex items-start gap-3">
+                <span className="w-14 text-[10px] uppercase tracking-[0.12em] text-[var(--as-text-secondary)]">{stage}</span>
+                <span className="leading-4 text-[var(--as-text-muted)]">{message}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              ['Exceptions', '03'],
+              ['Approvals', '09'],
+              ['Synced', '24'],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-[var(--as-radius-sm)] border border-[var(--as-border-default)] bg-[rgba(255,255,255,0.02)] px-2 py-2"
+              >
+                <div className="text-[9px] uppercase tracking-[0.14em] text-[var(--as-text-muted)]">{label}</div>
+                <div className="mt-1 text-sm font-semibold text-[var(--as-text-primary)]">{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {heroStacks.map((stack, index) => (
+          <div
+            key={stack.label}
+            className="absolute"
+            style={{
+              right: index === 0 ? '6rem' : '7rem',
+              top: index === 0 ? '2.5rem' : '18rem',
+              transform:
+                index === 0
+                  ? `rotateX(10deg) rotateY(14deg) rotateZ(4deg) translate3d(0, ${cardShift}px, 88px)`
+                  : `rotateX(8deg) rotateY(14deg) rotateZ(4deg) translate3d(0, ${cardShift * 0.8}px, 78px)`,
+            }}
+          >
+            <div className="hero-depth-panel w-32 p-3">
+              <div className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--as-text-muted)]">
+                {stack.label}
+              </div>
+              <div className="mt-2 text-sm font-semibold text-[var(--as-text-primary)]">{stack.value}</div>
+              <div className="mt-2 h-px w-full bg-[linear-gradient(90deg,rgba(59,130,246,0.35),transparent)]" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function HeroSection() {
   return (
     <section className="min-h-[calc(100vh-3.5rem)] flex items-center px-5 py-16 sm:px-6">
@@ -113,10 +212,9 @@ function HeroSection() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
-                to="/erp"
+                to="/login"
                 className="group relative inline-flex min-h-10 items-center justify-center overflow-hidden rounded-[var(--as-radius-md)] bg-gradient-to-r from-[#1d4ed8] via-[#3b82f6] to-[#06b6d4] px-5 py-2 text-sm font-semibold font-mono uppercase tracking-[0.12em] text-white shadow-[0_0_16px_rgba(59,130,246,0.25)] transition-all duration-300 hover:shadow-[0_0_28px_rgba(59,130,246,0.45)]"
               >
-                {/* Top sheen line */}
                 <span
                   aria-hidden
                   className="pointer-events-none absolute top-0 left-0 right-0 h-px z-[1] opacity-60"
@@ -125,7 +223,7 @@ function HeroSection() {
                   }}
                 />
                 <span className="relative z-10 flex items-center gap-1.5">
-                  Open ERP
+                  Login
                   <svg
                     className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
                     fill="none"
@@ -138,54 +236,21 @@ function HeroSection() {
                 </span>
               </Link>
               <Link
-                to="/how-it-works"
+                to="/book-demo"
                 className="inline-flex min-h-10 items-center justify-center rounded-[var(--as-radius-md)] border border-[var(--as-border-strong)] bg-transparent px-5 py-2 text-sm font-semibold font-mono uppercase tracking-[0.12em] text-[var(--as-text-secondary)] transition-all duration-200 hover:border-[var(--as-text-muted)] hover:text-[var(--as-text-primary)] hover:bg-[var(--as-bg-hover)]"
               >
-                How it works
+                Book a demo
               </Link>
             </div>
           </div>
 
-          {/* Decorative terminal — enterprise credibility */}
-          <div className="hidden lg:block">
-            <div className="rounded-[var(--as-radius-md)] border border-[var(--as-border-default)] bg-[var(--as-bg-primary)] p-4 font-mono text-[11px]">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[var(--as-text-secondary)]">run_rec_bnk_20260430_001</span>
-                <span className="rounded-[var(--as-radius-sm)] border border-[var(--as-success)]/15 bg-[var(--as-success-subtle)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--as-success)]">
-                  Completed
-                </span>
-              </div>
-              <div className="space-y-1.5">
-                {[
-                  ['Ingest', 'Bank statement: 1,247 transactions'],
-                  ['Normalize', 'Matched to invoices and POs'],
-                  ['Analysis', '12 flagged for review'],
-                  ['Policy', 'Auto-approved: $847K · Blocked: $23K'],
-                  ['Action', 'Reconciled. Exceptions routed to controller.'],
-                ].map(([stage, msg]) => (
-                  <div key={stage} className="flex items-center gap-3">
-                    <span className="w-16 text-[10px] uppercase tracking-[0.12em] text-[var(--as-text-secondary)]">{stage}</span>
-                    <span className="text-[var(--as-text-muted)]">{msg}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 border-t border-[var(--as-border-default)] pt-2.5">
-                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--as-text-muted)] mb-1">Executive summary</p>
-                <p className="text-[var(--as-text-secondary)] leading-4">
-                  Daily reconciliation completed. $847K auto-matched. 12 exceptions flagged for human review.
-                </p>
-              </div>
-            </div>
-          </div>
+          <HeroScene3D />
         </div>
       </div>
     </section>
   )
 }
 
-/* ================================================================== */
-/*  Section 2 — The Shift                                              */
-/* ================================================================== */
 function ShiftSection() {
   const columns = [
     {
@@ -260,9 +325,6 @@ function ShiftSection() {
   )
 }
 
-/* ================================================================== */
-/*  Section 3 — The Loop                                               */
-/* ================================================================== */
 function LoopSection() {
   const steps = [
     {
@@ -318,9 +380,6 @@ function LoopSection() {
   )
 }
 
-/* ================================================================== */
-/*  Section 4 — Use Cases                                              */
-/* ================================================================== */
 function UseCasesSection() {
   const cases = [
     {
@@ -367,9 +426,6 @@ function UseCasesSection() {
   )
 }
 
-/* ================================================================== */
-/*  Section 5 — Connected Ecosystem                                    */
-/* ================================================================== */
 function EcosystemSection() {
   return (
     <section>
@@ -400,9 +456,6 @@ function EcosystemSection() {
   )
 }
 
-/* ================================================================== */
-/*  Section 6 — Architecture                                           */
-/* ================================================================== */
 function ArchitectureSection() {
   const pillars = [
     {
@@ -445,9 +498,6 @@ function ArchitectureSection() {
   )
 }
 
-/* ================================================================== */
-/*  Section 7 — CTA                                                    */
-/* ================================================================== */
 function CTASection() {
   return (
     <section>
@@ -463,10 +513,9 @@ function CTASection() {
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
-            to="/erp"
+            to="/login"
             className="group relative inline-flex min-h-10 items-center justify-center overflow-hidden rounded-[var(--as-radius-md)] bg-gradient-to-r from-[#1d4ed8] via-[#3b82f6] to-[#06b6d4] px-6 py-2 text-sm font-semibold font-mono uppercase tracking-[0.12em] text-white shadow-[0_0_16px_rgba(59,130,246,0.25)] transition-all duration-300 hover:shadow-[0_0_28px_rgba(59,130,246,0.45)]"
           >
-            {/* Top sheen line */}
             <span
               aria-hidden
               className="pointer-events-none absolute top-0 left-0 right-0 h-px z-[1] opacity-60"
@@ -475,7 +524,7 @@ function CTASection() {
               }}
             />
             <span className="relative z-10 flex items-center gap-1.5">
-              Open ERP
+              Login
               <svg
                 className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
                 fill="none"
@@ -491,7 +540,7 @@ function CTASection() {
             to="/book-demo"
             className="inline-flex min-h-10 items-center justify-center rounded-[var(--as-radius-md)] border border-[var(--as-border-strong)] bg-transparent px-6 py-2 text-sm font-semibold font-mono uppercase tracking-[0.12em] text-[var(--as-text-secondary)] transition-all duration-200 hover:border-[var(--as-text-muted)] hover:text-[var(--as-text-primary)] hover:bg-[var(--as-bg-hover)]"
           >
-            Book demo
+            Book a demo
           </Link>
         </div>
       </div>

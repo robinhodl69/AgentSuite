@@ -6,7 +6,6 @@ const marketingLinks = [
   { to: '/use-cases', label: 'Use cases' },
   { to: '/security', label: 'Security' },
   { to: '/integrations', label: 'Integrations' },
-  { to: '/book-demo', label: 'Book demo' },
 ]
 
 export function PublicSiteNav() {

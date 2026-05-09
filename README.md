@@ -1,21 +1,26 @@
 # AgentSuite
 
-> **The Agentic ERP. Autonomous operations, human oversight.**
+> **The Agentic ERP — Under Construction**
+>
+> Autonomous operations, human oversight. Currently a **work-in-progress MVP candidate** focused on the Finance module.
 
-AgentSuite is a next-generation **Agentic ERP** — not a traditional dashboard with forms, but an autonomous operations platform where AI agents execute business processes in the background while humans review, approve, and steer.
+AgentSuite is an autonomous operations platform where AI agents execute business processes in the background while humans review, approve, and steer. Unlike traditional ERPs that are passive databases, AgentSuite is active: agents run reconciliation, evaluate supplier payments, and monitor budgets — surfacing decisions for human approval at critical gates.
 
-Traditional ERPs are passive databases. AgentSuite is active: agents run reconciliation, evaluate supplier payments, monitor budgets, and surface decisions for approval. You operate through intent, not clicks.
+**Current state:** The Finance module is the first and only operational module. All other modules are visual previews that communicate the product direction.
 
 ---
 
-## What makes it Agentic
+## What Works Today
 
-| Traditional ERP | AgentSuite |
-| --- | --- |
-| Manual data entry | Agents ingest and normalize inputs automatically |
-| Static reports | Agents analyze and flag exceptions in real time |
-| Rigid workflows | Agents route decisions through policy + human approval |
-| Module silos | Cross-module agents that understand context |
+### Finance Module (Operational)
+
+The Finance agent runs three persistent, database-backed processes:
+
+| Process | Status | Description |
+| --- | --- | --- |
+| **Bank Reconciliation** | Working | Ingests CSV statements, matches transactions against invoices/expenses using heuristic scoring + LLM disambiguation, returns matches, unmatched movements, ledger orphans, and manual review items. |
+| **Supplier Payments** | Working | Evaluates early-payment discounts against cash position and policy thresholds. Supports evaluate, simulate, and execute modes. Integrates with Stripe Link for virtual payment credentials (or mock mode for local dev). |
+| **Budget Control** | Working | Tracks expenses against monthly budgets, auto-categorizes via keyword rules + LLM fallback, surfaces preventive alerts and hard blocks when thresholds are exceeded. |
 
 Every process follows an autonomous pipeline:
 
@@ -25,45 +30,34 @@ Intent → Intake → Normalize → Skill Selection → Analysis → Policy → 
 
 Humans intervene at **policy** (thresholds) and **action** (approvals). Everything else runs autonomously.
 
----
-
-## Modules
-
-| Module | Status | Agent Capabilities |
-| --- | --- | --- |
-| **Finance** | Live | Bank reconciliation, supplier payment evaluation, budget control |
-| **Procurement** | Coming Soon | Purchase order optimization, vendor scoring, contract renewal alerts |
-| **Inventory** | Coming Soon | Demand forecasting, reorder automation, stock reconciliation |
-| **Sales & CRM** | Coming Soon | Lead scoring, quote generation, pipeline risk detection |
-| **Operations** | Coming Soon | Production scheduling, quality control, maintenance predictions |
-| **Human Resources** | Coming Soon | Payroll validation, expense compliance, headcount forecasting |
-| **Projects** | Coming Soon | Budget vs. actual tracking, milestone risk, resource allocation |
-| **Analytics** | Coming Soon | Natural language queries, anomaly detection, predictive alerts |
-
-Each module exposes three execution modes:
-
+Each process supports three execution modes:
 - **Evaluate** — Run analysis without side effects. See what the agent would do.
 - **Simulate** — Execute against test data or sandbox environments.
 - **Execute** — Run with real credentials, requiring human approval at critical gates.
 
+### Infrastructure That Works
+
+- **Persistent runs and audit logs** — All runs, decisions, and audit events are stored in PostgreSQL (or SQLite for local dev). Restarting the backend does not lose history.
+- **Invite-only authentication** — HttpOnly cookie sessions with refresh flow, Argon2 password hashing, and role-based access control (`finance_admin`, `accountant`, `treasurer`, `viewer`).
+- **Versioned API** — Backend routes under `/api/v1`.
+- **Docker Compose stack** — One-command local demo with PostgreSQL, migrations, and mock payments.
+- **CI pipeline** — GitHub Actions runs backend tests, frontend lint + build, and payments service build on every push.
+
 ---
 
-## Live Capabilities
+## What Is Coming Soon
 
-### 1. Bank Reconciliation
-- Ingests CSV statements
-- Matches transactions against invoices and expenses using heuristic scoring + LLM disambiguation
-- Returns matches, unmatched movements, ledger orphans, and manual review items
+The following modules exist as **visual previews** in the UI to communicate the product roadmap. They are not yet operational:
 
-### 2. Supplier Payments
-- Evaluates early-payment discounts against cash position and policy thresholds
-- Generates one-time virtual payment credentials via Stripe Link (or mock mode for local dev)
-- Requires human approval for execution; simulates safely for testing
-
-### 3. Budget Control
-- Tracks expenses against monthly budgets
-- Auto-categorizes via keyword rules + LLM fallback
-- Surfaces preventive alerts and hard blocks when thresholds are exceeded
+| Module | Status | Planned Capabilities |
+| --- | --- | --- |
+| **Procurement** | Preview | Purchase order optimization, vendor scoring, contract renewal alerts |
+| **Inventory** | Preview | Demand forecasting, reorder automation, stock reconciliation |
+| **Sales & CRM** | Preview | Lead scoring, quote generation, pipeline risk detection |
+| **Operations** | Preview | Production scheduling, quality control, maintenance predictions |
+| **Human Resources** | Preview | Payroll validation, expense compliance, headcount forecasting |
+| **Projects** | Preview | Budget vs. actual tracking, milestone risk, resource allocation |
+| **Analytics** | Preview | Natural language queries, anomaly detection, predictive alerts |
 
 ---
 
@@ -73,9 +67,9 @@ AgentSuite is composed of three independent services designed for production dep
 
 | Service | Stack | Responsibility |
 | --- | --- | --- |
-| **Agent Core** | Python, FastAPI, LangGraph | Workflow engine, process services, LLM orchestration |
+| **Agent Core** | Python, FastAPI, LangGraph, SQLAlchemy 2, Alembic | Workflow engine, process services, LLM orchestration, persistence |
 | **Payments Gateway** | Node.js, Express | Wrapper around Stripe Link CLI for secure one-time credentials |
-| **Console** | React, Vite, Tailwind | Human interface for intent, review, approval, and audit |
+| **Console** | React, Vite, Tailwind, Ant Design | Human interface for intent, review, approval, and audit |
 
 ```
 ┌─────────────┐     HTTP      ┌──────────────┐     HTTP      ┌─────────────────┐
@@ -92,7 +86,7 @@ AgentSuite is composed of three independent services designed for production dep
 
 ### Frontend UI system
 
-The ERP console now uses a **free enterprise UI stack** based on:
+The ERP console uses a **free enterprise UI stack** based on:
 
 - **Ant Design** for core components,
 - **Ant Design ProComponents** for backoffice patterns such as enterprise tables,
@@ -211,7 +205,7 @@ The compose stack runs:
 
 ## Environment Variables
 
-Keep these local. Never commit `.env` files.
+Keep these local. Never commit `.env` files. The repo ignores all `.env`, `*.db`, and generated build artifacts by default.
 
 ### Agent Core (`agent/.env`)
 ```env
@@ -249,13 +243,13 @@ source .venv/bin/activate
 pytest test/test_api.py -v
 ```
 
-All tests run against mock dependencies. No Stripe account or network calls required.
+All core API tests pass. Tests run against mock dependencies — no Stripe account or network calls required.
 
 ---
 
 ## CI
 
-GitHub Actions now validates the repo with:
+GitHub Actions validates the repo with:
 
 - backend tests,
 - frontend lint + build,
@@ -268,11 +262,12 @@ Workflow file: `.github/workflows/ci.yml`
 ## Roadmap
 
 - [x] Finance agent (reconciliation, payments, budgets)
+- [x] Persistent run history (database-backed)
+- [x] Invite-only auth with roles
 - [ ] Procurement agent (PO optimization, vendor scoring)
 - [ ] Inventory agent (demand forecasting, auto-reorder)
 - [ ] Sales agent (lead scoring, quote generation)
 - [ ] Cross-module context sharing
-- [x] Persistent run history (database-backed)
 - [ ] Multi-tenant workspace support
 - [ ] Audit trail with cryptographic signatures
 

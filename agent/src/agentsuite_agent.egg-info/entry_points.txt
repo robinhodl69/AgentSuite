@@ -1,2 +1,0 @@
-[console_scripts]
-agentsuite-agent = agentsuite_agent.main:main

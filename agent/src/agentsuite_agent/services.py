@@ -15,7 +15,6 @@ from .models import (
     BudgetDecision,
     BudgetLimit,
     ExpenseInput,
-    ExpenseRecord,
     PaymentDecision,
     ProcessType,
     ReconciliationMatch,

@@ -13,3 +13,20 @@ frontend/.env
 frontend/FRONTEND_EXECUTION_PLAN.md
 __pycache__/
 *.py[cod]
+
+# Bases de datos locales
+*.db
+*.sqlite
+*.sqlite3
+
+# Metadatos de paquetes Python (en cualquier nivel)
+*.egg-info/
+
+# Cachés de herramientas de análisis
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# Cobertura de tests
+.coverage
+htmlcov/
